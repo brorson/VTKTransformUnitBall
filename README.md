@@ -9,6 +9,8 @@ values of the matrix A and display them on the screen.  The user can
 see that the lengths of the three axes of the ellipsoid are the same
 as the singular values of A.
 
+![Unit ball](TransformUnitBallScreenshot.png)
+
 If the user hits the key 'r' (refresh) then a new matrix is generated
 and a new ellipsoid is drawn on the screen.
 
