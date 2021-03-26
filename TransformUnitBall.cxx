@@ -76,7 +76,7 @@ public:
 int main(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
 {
 
-  cout << "Hit \'r\' to refresh (get a new ellipsoid" << endl;
+  cout << "Hit \'r\' to refresh (get a new ellipsoid)" << endl;
   cout << "Hit \'q\' to quit" << endl;
   
   // Seed RNG with time
