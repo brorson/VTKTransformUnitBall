@@ -18,7 +18,9 @@ The goal of the program is to serve as a supplement to the
 "visualizing a matrix" lecture in Northeastern's numerical analysis
 class. 
 
-To build the program, cd into the build directory then do:
+To build the program, create a subdirectory called build.  Then 
+cd into the build directory and do:
+
 cmake ..
 make
 
