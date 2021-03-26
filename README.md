@@ -24,6 +24,7 @@ To build the program, create a subdirectory called build.  Then
 cd into the build directory and do:
 
 cmake ..
+
 make
 
 The run the program ./TransformUnitBall in the build directory.
