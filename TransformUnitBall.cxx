@@ -31,6 +31,7 @@
 #include <vtkProperty2D.h>
 #include <vtkTextProperty.h>
 #include <vtkMatrix3x3.h>
+#include <vtkCamera.h>
 
 #include <iostream>
 #include <ostream>
@@ -53,21 +54,27 @@ public:
     vtkRenderWindowInteractor *iren = 
       static_cast<vtkRenderWindowInteractor*>(caller);
 
-    //std::cout << "Caught event in MyClass" << std::endl;
-    std::string key = iren->GetKeySym();
-    //cout << "Key pressed: " << key << endl;
+    //std::cout << "Caught event in KeypressCallbackFunction" << std::endl;
+    std::string key;
+    if (iren->GetKeySym()) {
+      key = iren->GetKeySym();
+      //cout << "Key pressed: " << key << endl;
+    }
     
-    RPressed = false;      
     if (key == "r"){
       RPressed = true;
-      iren->ExitCallback ();  // Exit the loop after setting RPressed flag.
+      iren->ExitCallback ();  // Exit the loop since we caught an "r"
     } else {
       RPressed = false;
     }
   }
 
   bool RKeyPressed(void) {
-    return RPressed;
+    // I need to reset the state after every query, otherwise
+    // the RPressed persists and I can't capture other events.
+    bool temp = RPressed;
+    RPressed = false;
+    return temp;
   }
   
 };
@@ -132,6 +139,15 @@ int main(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
   // Create renderer and render window
   vtkNew<vtkRenderer> renderer;
   renderer->SetBackground(BackgroundColour.GetData());
+
+  // Store my initial camera position so I can get it back.
+  double initPos[3] = {1.0, 0.0, 0.0};
+  double initFP[3];
+  double initViewUp[3] = {0.0, 0.0, 1.0}; // I want z axis up
+  renderer->GetActiveCamera()->SetPosition(initPos);
+  renderer->GetActiveCamera()->GetFocalPoint(initFP);
+  renderer->GetActiveCamera()->SetViewUp(initViewUp);
+  // cout << "Camera position = " << initPos[0] << " " << initPos[1] << " " << initPos[2] << " " << endl;
   
   vtkNew<vtkRenderWindow> renderWindow;
   renderWindow->AddRenderer(renderer);
@@ -139,7 +155,7 @@ int main(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
   renderWindow->SetSize(800, 600); // This sets size of window on computer screen.
   
   
-  // Create new Interactor
+  // Create Interactor
   vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
   renderWindowInteractor->SetRenderWindow(renderWindow);
   vtkNew<vtkInteractorStyleTrackballCamera> style;
@@ -151,14 +167,15 @@ int main(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
 				      &KeyEvent,
 				      &KeyEventHandler::KeypressCallbackFunction);
   
-    
-  // Add axes to the render window interactor
+  // Add axes to the render window interactor.
+  // I do this new with every loop so the axes start in the
+  // correct orientation.
   vtkNew<vtkAxesActor> axes;
   vtkNew<vtkOrientationMarkerWidget> widget;
   widget->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
   widget->SetOrientationMarker( axes );
   widget->SetInteractor( renderWindowInteractor );
-  widget->SetViewport( 0.0, 0.0, 0.3, 0.3 );
+  widget->SetViewport( 0.0, 0.0, 0.2, 0.2 );
   widget->SetEnabled( 1 );
     
 
@@ -305,7 +322,6 @@ int main(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
     textActor->SetPosition2(50, 50);
     textActor->GetTextProperty()->SetFontSize(24);
   
-    
     // add the unit ball actor to the renderer
     double mag = 1.0/(2.2*(ymax+1.0));
     unitBallActor->SetScale(mag, mag, mag);
@@ -319,14 +335,17 @@ int main(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
     renderer->AddActor2D(textActor);
 
     // Start the event loop by telling the render window to render
-    // and the interactor to start.
+    // and the interactor to start.  First reset view position.
+    renderer->GetActiveCamera()->SetPosition(initPos);
+    renderer->GetActiveCamera()->SetFocalPoint(initFP);
+    renderer->GetActiveCamera()->SetViewUp(initViewUp);
+    renderer->ResetCamera();
     renderWindow->Render();
     renderWindowInteractor->Start();
     
-    // If we get here, it's because the user hit the 'r' key
-    // and the interactor loop stopped.
-    // Need to close existing window.
-    // Check if 'r' key is pressed
+    // If we get here, it's because an event happened which caused
+    // the interactor to stop.  Check if it's an 'r' key for refresh
+    // or if some other even happened, in case we should quit.
     if(KeyEvent.RKeyPressed()) {
       //cout << "R key noticed in main" << endl;
       renderer->RemoveActor(ellipseActor);
