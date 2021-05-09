@@ -38,6 +38,7 @@
 #include <string>
 #include <sstream>
 #include <time.h>
+#include <vector> 
 
 //------------------------------------------------------------------
 class KeyEventHandler {
@@ -214,19 +215,24 @@ int main(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
     // Compute SVD of A
     double U[3][3];
     double VT[3][3];
-    double sig[3];
-    vtkMath::SingularValueDecomposition3x3 (A, U, sig, VT);
+    double sigv[3];
+    vtkMath::SingularValueDecomposition3x3 (A, U, sigv, VT);
 
+    // Sort singular values in decreasing order.
     // Note that VTK uses a funky method to compute the SVD and
     // the singular values are not necesarily positive.  Therefore,
-    // take the abs before display.
+    // take the abs first.
+    std::vector<double> sig(3);
+    for (int i=0; i<3; i++) sig[i] = std::abs(sigv[i]);
+    std::sort(sig.begin(), sig.end(), std::greater<double>());
+    
     //cout << "sig = " << sig[0] << sig[1] << sig[2] << endl;
     std::stringstream out1;
-    out1 << std::setprecision(3) << "sig1 = " << std::abs(sig[0]);
+    out1 << std::setprecision(3) << "sig1 = " << sig[0];
     std::stringstream out2;
-    out2 << std::setprecision(3) << ", sig2 = " << std::abs(sig[1]);
+    out2 << std::setprecision(3) << ", sig2 = " << sig[1];
     std::stringstream out3;
-    out3 << std::setprecision(3) << ", sig3 = " << std::abs(sig[2]);
+    out3 << std::setprecision(3) << ", sig3 = " << sig[2];
     //std::string txt1 = "sig1 = " + std::to_string(sig[0]);
     //std::string txt2 = "sig2 = " + std::to_string(sig[1]);
     //std::string txt3 = "sig3 = " + std::to_string(sig[2]);    
